@@ -13,8 +13,8 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 tokenizer_s = AutoTokenizer.from_pretrained(checkpoint_s)
 tokenizer_b = AutoTokenizer.from_pretrained(checkpoint_b)
 
-model_s = AutoModelForCausalLM.from_pretrained(checkpoint_s)
-model_b = AutoModelForCausalLM.from_pretrained(checkpoint_b)
+model_s = AutoModelForCausalLM.from_pretrained(checkpoint_s).to(device)
+model_b = AutoModelForCausalLM.from_pretrained(checkpoint_b).to(device)
 
 messages = [{"role" : "user", "content" : "What is the capital of Poland?"}]
 input_text_s = tokenizer_s.apply_chat_template(messages, tokenize=False)
