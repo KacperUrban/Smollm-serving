@@ -4,38 +4,25 @@ import os
 
 os.makedirs("tokenizers", exist_ok=True)
 os.makedirs("models", exist_ok=True)
-
-checkpoint_s = "HuggingFaceTB/SmolLM2-135M-Instruct"
-checkpoint_b = "HuggingFaceTB/SmolLM2-360M-Instruct"
-
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-tokenizer_s = AutoTokenizer.from_pretrained(checkpoint_s)
-tokenizer_b = AutoTokenizer.from_pretrained(checkpoint_b)
+def download_and_save_model(checkpoint: str, messages: list[dict], filepath_model: str, filepath_tokenizer: str) -> None:
+    tokenizer = AutoTokenizer.from_pretrained(checkpoint)
+    model = AutoModelForCausalLM.from_pretrained(checkpoint)
 
-model_s = AutoModelForCausalLM.from_pretrained(checkpoint_s).to(device)
-model_b = AutoModelForCausalLM.from_pretrained(checkpoint_b).to(device)
+    input_text = tokenizer.apply_chat_template(messages, tokenize=False)
+    inputs = tokenizer.encode(input_text, return_tensors="pt").to(device)
+    outputs = model_s.generate(inputs, max_new_tokens=50, temperature=0.2, top_p=0.9, do_sample=True)
+    response  = tokenizer.decode(outputs[0], skip_special_tokens=True, clean_up_tokenization_spaces=True)
+    print(response)
 
-messages = [{"role" : "user", "content" : "What is the capital of Poland?"}]
-input_text_s = tokenizer_s.apply_chat_template(messages, tokenize=False)
-input_text_b = tokenizer_b.apply_chat_template(messages, tokenize=False)
+    print("Saving model and tokenizer...")
+    model.save_pretrained(filepath_model)
+    tokenizer.save_pretrained(filepath_tokenizer)
 
-print(f"First model - {checkpoint_s}")
-print(input_text_s)
 
-inputs_s = tokenizer_s.encode(input_text_s, return_tensors="pt").to(device)
-outputs_s = model_s.generate(inputs_s, max_new_tokens=50, temperature=0.2, top_p=0.9, do_sample=True)
-print(tokenizer_s.decode(outputs_s[0]))
-print("Saving first model ...")
-tokenizer_s.save_pretrained("tokenizers/smollm-135M/")
-model_s.save_pretrained("models/smollm-135M/")
+if __name__ == '__main__':
+    messages = [{"role" : "user", "content" : "What is the capital of Poland?"}]
 
-print(f"Second model - {checkpoint_b}")
-print(input_text_b)
-
-inputs_b = tokenizer_b.encode(input_text_b, return_tensors="pt").to(device)
-outputs_b = model_b.generate(inputs_b, max_new_tokens=50, temperature=0.2, top_p=0.9, do_sample=True)
-print(tokenizer_b.decode(outputs_b[0]))
-print("Saving second model ...")
-tokenizer_b.save_pretrained("tokenizers/smollm-360M/")
-model_b.save_pretrained("models/smollm-360M/")
+    download_and_save_model("HuggingFaceTB/SmolLM2-135M-Instruct", messages, "models/smollm-135M/", "tokenizers/smollm-135M/")
+    download_and_save_model("HuggingFaceTB/SmolLM2-360M-Instruct", messages, "models/smollm-360M/", "models/smollm-360M/")
