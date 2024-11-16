@@ -1,26 +1,21 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
+def load_and_predict(filepath_model: str, filepath_tokenizer: str, messages: list[dict], max_new_tokens: int = 50, 
+                     temperature: float = 0.1, top_p: float = 0.9, do_sample: bool = True) -> None:
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    tokenizer = AutoTokenizer.from_pretrained(filepath_tokenizer)
+    model = AutoModelForCausalLM.from_pretrained(filepath_model).to(device)
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-print(device)
+    input_text = tokenizer.apply_chat_template(messages, tokenize=False)
+    inputs = tokenizer.encode(input_text, return_tensors="pt").to(device)
 
-tokenizer_s = AutoTokenizer.from_pretrained("tokenizers/smollm-135M/")
-tokenizer_b = AutoTokenizer.from_pretrained("tokenizers/smollm-360M/")
+    outputs = model.generate(inputs, max_new_tokens=max_new_tokens, temperature=temperature, top_p=top_p, do_sample=do_sample)
+    print(tokenizer.decode(outputs[0]))
 
-model_s = AutoModelForCausalLM.from_pretrained("models/smollm-135M/").to(device)
-model_b = AutoModelForCausalLM.from_pretrained("models/smollm-360M/").to(device)
 
-messages = [{"role" : "user", "content" : "What is the capital of Poland?"}, {"role" : "user", "content" : "What is the capital of France?"}]
-input_text_s = tokenizer_s.apply_chat_template(messages, tokenize=False)
-input_text_b = tokenizer_b.apply_chat_template(messages, tokenize=False)
+if __name__ == '__main__':
+    messages = [{"role" : "user", "content" : "What is the OOP paradigm in programming?"}]
 
-print("First model - smollm-135M")
-inputs_s = tokenizer_s.encode(input_text_s, return_tensors="pt", padding=True).to(device)
-outputs_s = model_s.generate(inputs_s, max_new_tokens=50, temperature=0.2, top_p=0.9, do_sample=True)
-print(tokenizer_s.decode(outputs_s[0]))
-
-print("Second model - smollm-360M")
-inputs_b = tokenizer_b.encode(input_text_b, return_tensors="pt", padding=True).to(device)
-outputs_b = model_b.generate(inputs_b, max_new_tokens=50, temperature=0.2, top_p=0.9, do_sample=True)
-print(tokenizer_b.decode(outputs_b[0]))
+    load_and_predict("models/smollm-135M/", "tokenizers/smollm-135M/", messages)
+    load_and_predict("models/smollm-360M/", "tokenizers/smollm-360M/", messages)
