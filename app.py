@@ -25,6 +25,17 @@ async def lifespan(app):
 app = FastAPI(lifespan=lifespan)
 
 
-app.get("healthcheck/")
+@app.get("/healthcheck")
 def healtcheck():
     return {"status" : "ok"}
+
+@app.post("/predict135M")
+def predict_135M(messages: list[dict]) -> str:
+    model = models["smollm-135M"].to(device)
+    tokenizer = tokenizers["smollm-135M"]
+    input_text = tokenizer.apply_chat_template(messages, tokenize=False)
+    inputs = tokenizer.encode(input_text, return_tensors="pt").to(device)
+    outputs = model.generate(inputs, max_new_tokens=50, temperature=0.2, top_p=0.9, do_sample=True)
+    response  = tokenizer.decode(outputs[0], skip_special_tokens=True, clean_up_tokenization_spaces=True)
+    _, response = response.split("assistant\n")
+    return response

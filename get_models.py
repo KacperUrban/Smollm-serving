@@ -12,7 +12,7 @@ def download_and_save_model(checkpoint: str, messages: list[dict], filepath_mode
 
     input_text = tokenizer.apply_chat_template(messages, tokenize=False)
     inputs = tokenizer.encode(input_text, return_tensors="pt").to(device)
-    outputs = model_s.generate(inputs, max_new_tokens=50, temperature=0.2, top_p=0.9, do_sample=True)
+    outputs = model.generate(inputs, max_new_tokens=50, temperature=0.2, top_p=0.9, do_sample=True)
     response  = tokenizer.decode(outputs[0], skip_special_tokens=True, clean_up_tokenization_spaces=True)
     print(response)
 
