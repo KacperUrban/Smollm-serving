@@ -39,3 +39,15 @@ def predict_135M(messages: list[dict]) -> str:
     response  = tokenizer.decode(outputs[0], skip_special_tokens=True, clean_up_tokenization_spaces=True)
     _, response = response.split("assistant\n")
     return response
+
+
+@app.post("/predict360M")
+def predict_360M(messages: list[dict]) -> str:
+    model = models["smollm-360M"].to(device)
+    tokenizer = tokenizers["smollm-360M"]
+    input_text = tokenizer.apply_chat_template(messages, tokenize=False)
+    inputs = tokenizer.encode(input_text, return_tensors="pt").to(device)
+    outputs = model.generate(inputs, max_new_tokens=50, temperature=0.2, top_p=0.9, do_sample=True)
+    response  = tokenizer.decode(outputs[0], skip_special_tokens=True, clean_up_tokenization_spaces=True)
+    _, response = response.split("assistant\n")
+    return response
