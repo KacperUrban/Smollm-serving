@@ -7,7 +7,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 models = {}
 tokenizers = {}
 
-def load_model(filepath_model: str, filepath_tokenizer: str) -> None:
+def load_model(filepath_model: str, filepath_tokenizer: str):
     tokenizer = AutoTokenizer.from_pretrained(filepath_tokenizer)
     model = AutoModelForCausalLM.from_pretrained(filepath_model)
     return model, tokenizer
